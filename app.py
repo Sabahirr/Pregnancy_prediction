@@ -2,7 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+# import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 
 
@@ -202,6 +202,45 @@ df = df.fillna('')
 # Display the DataFrame
 st.write(df)
 
+import random
+
+def adjust_result(yas, amh, model_output):
+ 
+    if yas < 35:
+        min_value_yas = 0.68  
+        max_value_yas = 1.0   
+    elif 35 <= yas <= 40:
+        min_value_yas = 0.52
+        max_value_yas = 0.67
+    else:  # yas > 40
+        min_value_yas = 0.03
+        max_value_yas = 0.15
+
+    if amh > 1.5:
+        min_value_amh = max(min_value_yas, 0.68)  # AMH > 1.5: 68% minimum
+        max_value_amh = max(max_value_yas, 1.0)   # Maksimum 100%
+    elif 1 >= amh > 1:
+        min_value_amh = max(min_value_yas, 0.50)  # AMH > 1: 50%-60%
+        max_value_amh = max(max_value_yas, 0.60)
+    else:  # amh < 1
+        min_value_amh = max(min_value_yas, 0.09)  # AMH < 1: 25%-dən kiçik
+        max_value_amh = max(max_value_yas, 0.25)
+
+    min_value = (min_value_yas + min_value_amh) / 2
+    max_value = (max_value_yas + max_value_amh) / 2
+
+    model_prob = model_output[0, 1]
+
+    final_result = max(min_value, min(model_prob, max_value))
+    
+    if yas <12:
+        final_result = 0.02
+
+    
+    final_result += random.uniform(-0.02, 0.02)  
+
+    return final_result * 100  
+
 
 
 # 5. Prediction button
@@ -216,8 +255,15 @@ if st.button('Proqnoz'):
     input_data_scaled = scaler.transform(input_data)
     
     # 7. Make a prediction
-    prediction = model.predict_proba(input_data_scaled)        # for Log model
-    predict_percent = prediction[0,1]*100
+    prediction = model.predict_proba(input_data_scaled)  
+    
+    predict_percent = adjust_result(yas=yas, amh=amh, model_output=prediction)
+    
+    print(f"model--->{prediction}, ------------ yekun--->{predict_percent}")
+    
+    
+    # # for Log model
+    # predict_percent = prediction[0,1]*100
 
     # prediction = model.predict(input_data_scaled)            # for ANN model
     # predict_percent = float(prediction[0]) * 100
