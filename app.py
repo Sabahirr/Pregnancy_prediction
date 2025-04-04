@@ -208,7 +208,7 @@ def adjust_result(yas, amh, model_output):
  
     if yas < 35:
         min_value_yas = 0.68  
-        max_value_yas = 1.0   
+        max_value_yas = 0.85   
     elif 35 <= yas <= 40:
         min_value_yas = 0.52
         max_value_yas = 0.67
@@ -218,7 +218,7 @@ def adjust_result(yas, amh, model_output):
 
     if amh > 1.5:
         min_value_amh = max(min_value_yas, 0.68)  # AMH > 1.5: 68% minimum
-        max_value_amh = max(max_value_yas, 1.0)   # Maksimum 100%
+        max_value_amh = max(max_value_yas, 0.8)   # Maksimum 100%
     elif 1 >= amh > 1:
         min_value_amh = max(min_value_yas, 0.50)  # AMH > 1: 50%-60%
         max_value_amh = max(max_value_yas, 0.60)
@@ -233,8 +233,10 @@ def adjust_result(yas, amh, model_output):
 
     final_result = max(min_value, min(model_prob, max_value))
     
-    if yas <12:
+    if yas < 12:
         final_result = 0.02
+    elif yas > 55:
+        final_result = 0.08
 
     
     final_result += random.uniform(-0.02, 0.02)  
